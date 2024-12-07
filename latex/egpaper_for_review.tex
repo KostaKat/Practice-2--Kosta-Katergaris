@@ -1,0 +1,62 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Include other packages here, before hyperref.
+
+% If you comment hyperref and then uncomment it, you should delete
+% egpaper.aux before re-running latex.  (Or just hit 'q' on the first latex
+% run, let it finish, and you should be clear).
+\usepackage[pagebackref=true,breaklinks=true,letterpaper=true,colorlinks,bookmarks=false]{hyperref}
+
+\cvprfinalcopy % *** Uncomment this line for the final submission
+
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+\ifcvprfinal\pagestyle{empty}\fi
+\begin{document}
+
+%%%%%%%%% TITLE
+\title{Practice 1: Training SwinV2 on CheXpert Dataset }
+
+\author{Konstantinos Katergaris\\
+Arizona State University\\
+1151 S Forest Ave, Tempe, AZ\\
+{\tt\small kkaterga@asu.edu}}
+
+%\thispagestyle{empty}
+
+\maketitle
+\begin{abstract}
+For this practice, the task was to train a .
+\end{abstract}
+\section{Dataset Loading}
+Since the CheXpert dataset provides training, validation, and test sets in CSV format, each CSV file was loaded using pandas. Each CSV contains the file path and other metadata, with the labels located from column 5 to the last column, except for the test dataset, where the labels are located from the 2nd column to the last column. These labels were converted to a NumPy array and then to a tensor for the model. Additionally, the first column in each file contained the image file path, which was used to open and convert the image to a tensor. The image was then resized to 256X256 and converted to RGB format.
+\section{Model}
+The model used for both pretrained weights and training from scratch was a Swin Transformer V2 base from Microsoft, from Hugging Face Transformers. It had a patch size of 4, an input size of 256x256, and a window size of 16.
+\section{Training}
+n the first iteration of the training script, the Trainer from Hugging Face \cite{huggingfacetrain} was used, with a learning rate of 5e-4, 3 epochs, a batch size of 128, and the AdamW optimizer. However, this took 24 hours to complete one run of training from scratch, so another script was created. Additionally, it is important to note that BCEWithLogitsLoss was used as the loss function, since classifying images from CheXpert is a multi-label classification patients can have more than one disease or class label. Given this, a revised training script was made, where instead of using the Trainer, a custom training loop was constructed using PyTorch. It used the same optimizer, loss function, batch size, and number of epochs, but mixed precision training was incorporated using GradScaler and autocast. Unfortunately, a critical flaw in this script was that it saved the model weights only after the testing function, which resulted in no weights being saved after training. Ultimately resulting in no results.
+
+\section{Validation/Test}
+To calculate the AUC for multi-label classification, the AUC for each class was calculated per label output and then averaged. However, in the second training script, the output was in binary predictions instead of multi-class predictions. As a result, before the weights could be saved, the script terminated, ultimately producing no results for the updated training script.
+
+\section{Results}
+The one model that could train resulted in a 0.604 AUC, which basically random at guessing.
+
+
+
+
+
+{\small
+\bibliographystyle{ieee_fullname}
+\bibliography{egbib}
+
+}
+\end{document}
